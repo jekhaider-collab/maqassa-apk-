@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>مقاصة — تسوية الديون وحلقات المقاصة</title>
+  
+  <!-- خطوط عربية عصرية من Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            bgPrimary: '#0a0f18',
+            cardSurface: '#111824',
+            cardElevated: '#151e2d',
+            borderSubtle: '#1e293b',
+            emeraldMain: '#10b981',
+            emeraldBtn: '#16a34a',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0a0f18;
+      color: #f8fafc;
+      font-family: 'Cairo', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* التدرجات الدقيقة للبطاقات المطابقة للصور */
+    .card-emerald-glow {
+      background: radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.16) 0%, rgba(17, 24, 36, 0.96) 58%, #111824 100%);
+      border: 1px solid rgba(30, 41, 59, 0.95);
+    }
+
+    .card-red-glow {
+      background: radial-gradient(circle at 0% 0%, rgba(239, 68, 68, 0.16) 0%, rgba(17, 24, 36, 0.96) 58%, #111824 100%);
+      border: 1px solid rgba(30, 41, 59, 0.95);
+    }
+
+    .card-amber-glow {
+      background: radial-gradient(circle at 0% 0%, rgba(245, 158, 11, 0.16) 0%, rgba(17, 24, 36, 0.96) 58%, #111824 100%);
+      border: 1px solid rgba(30, 41, 59, 0.95);
+    }
+
+    .card-base {
+      background-color: #111824;
+      border: 1px solid #1e293b;
+    }
+
+    .card-danger {
+      background: radial-gradient(circle at 100% 0%, rgba(220, 38, 38, 0.08) 0%, #111824 60%);
+      border: 1px solid rgba(220, 38, 38, 0.35);
+    }
+
+    /* شريط تمرير أنيق */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0a0f18;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+
+    /* حركات ناعمة */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade {
+      animation: fadeIn 0.22s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="pb-28 selection:bg-emerald-500/30 selection:text-emerald-200">
+
+  <!-- الحاوية الرئيسية للتطبيق (متجاوبة وتبدو مثالية على الهاتف وسطح المكتب) -->
+  <div class="max-w-md mx-auto min-h-screen flex flex-col relative bg-[#0a0f18] shadow-2xl shadow-black/60">
+
+    <!-- الشريط العلوي الثابت (Sticky Top Header) -->
+    <header class="sticky top-0 z-30 bg-[#0a0f18]/90 backdrop-blur-md border-b border-[#1e293b]/80 px-4 py-3.5 flex items-center justify-between">
+      <!-- الجانب الأيمن: عنوان التطبيق أو زر الرجوع -->
+      <div class="flex items-center gap-2.5">
+        <button id="headerBackBtn" onclick="navigateTo('home')" class="hidden p-1.5 -mr-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/70 transition" aria-label="رجوع">
+          <i data-lucide="chevron-right" class="w-5 h-5"></i>
+        </button>
+        <h1 id="headerTitle" class="text-xl font-extrabold tracking-tight text-white cursor-pointer" onclick="navigateTo('home')">مقاصة</h1>
+      </div>
+
+      <!-- الجانب الأيسر: أيقونات الملف الشخصي وتبديل الحساب التجريبي -->
+      <div class="flex items-center gap-2">
+        <!-- زر الملف الشخصي -->
+        <button id="profileNavBtn" onclick="navigateTo('profile')" title="ملفي الشخصي" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800/80 border border-transparent transition">
+          <i data-lucide="user" class="w-[18px] h-[18px]"></i>
+        </button>
+
+        <!-- زر تبديل الحساب / الخروج (للتجربة الفورية بين الأطراف) -->
+        <button onclick="openAccountModal()" title="تبديل الحساب التجريبي أو المحاكاة" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-emerald-400 hover:bg-slate-800/80 transition relative">
+          <i data-lucide="log-out" class="w-[18px] h-[18px] rotate-180"></i>
+          <span id="demoSwitchDot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- محتوى الصفحات الديناميكي -->
+    <main id="appContent" class="flex-1 px-4 pt-5 pb-6 space-y-4 animate-fade">
+      <!-- يتم حقن الصفحة النشطة هنا عبر JavaScript -->
+    </main>
+
+    <!-- زر الإجراء العائم (+ تسجيل دين) -->
+    <button id="fabAddDebt" onclick="openNewDebtModal()" aria-label="تسجيل دين جديد"
+      class="fixed bottom-24 left-5 md:left-[calc(50%-200px)] z-30 w-14 h-14 rounded-full bg-[#10b981] hover:bg-[#059669] active:scale-95 text-[#062419] shadow-lg shadow-emerald-500/25 flex items-center justify-center transition-all duration-200">
+      <i data-lucide="plus" class="w-7 h-7 stroke-[2.5]"></i>
+    </button>
+
+    <!-- شريط التنقل السفلي الثابت (Bottom Fixed Navigation Bar) -->
+    <nav class="fixed bottom-0 inset-x-0 z-30 bg-[#0c121d]/95 backdrop-blur-lg border-t border-[#1e293b]">
+      <div class="max-w-md mx-auto grid grid-cols-4 h-16 px-2">
+        <!-- 1. اللوحة -->
+        <button onclick="navigateTo('home')" data-tab="home" class="nav-btn flex flex-col items-center justify-center gap-1 text-xs font-semibold transition">
+          <i data-lucide="layout-grid" class="w-5 h-5"></i>
+          <span>اللوحة</span>
+        </button>
+
+        <!-- 2. الطلبات -->
+        <button onclick="navigateTo('requests')" data-tab="requests" class="nav-btn relative flex flex-col items-center justify-center gap-1 text-xs font-semibold transition">
+          <div class="relative">
+            <i data-lucide="file-text" class="w-5 h-5"></i>
+            <span id="navRequestsBadge" class="hidden absolute -top-1.5 -left-2 min-w-[16px] h-4 px-1 rounded-full bg-amber-500 text-[#0a0f18] text-[10px] font-bold flex items-center justify-center">0</span>
+          </div>
+          <span>الطلبات</span>
+        </button>
+
+        <!-- 3. المقاصة -->
+        <button onclick="navigateTo('loops')" data-tab="loops" class="nav-btn relative flex flex-col items-center justify-center gap-1 text-xs font-semibold transition">
+          <div class="relative">
+            <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+            <span id="navLoopsBadge" class="hidden absolute -top-1.5 -left-2 min-w-[16px] h-4 px-1 rounded-full bg-emerald-500 text-[#0a0f18] text-[10px] font-bold flex items-center justify-center">0</span>
+          </div>
+          <span>المقاصة</span>
+        </button>
+
+        <!-- 4. السجل -->
+        <button onclick="navigateTo('history')" data-tab="history" class="nav-btn flex flex-col items-center justify-center gap-1 text-xs font-semibold transition">
+          <i data-lucide="history" class="w-5 h-5"></i>
+          <span>السجل</span>
+        </button>
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- نافذة تسجيل دين جديد (New Debt Modal)       -->
+  <!-- ========================================== -->
+  <div id="newDebtModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4">
+    <div class="w-full max-w-md bg-[#111824] border-t sm:border border-[#1e293b] rounded-t-3xl sm:rounded-3xl p-5 space-y-4 animate-fade shadow-2xl">
+      <div class="flex items-center justify-between border-b border-[#1e293b] pb-3">
+        <div>
+          <h3 class="text-lg font-bold text-white">تسجيل دين جديد</h3>
+          <p class="text-xs text-slate-400">سيُرسل الطلب للطرف الآخر للموافقة قبل اعتماده</p>
+        </div>
+        <button onclick="closeModal('newDebtModal')" class="p-2 rounded-xl bg-slate-800/70 text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="newDebtForm" onsubmit="handleCreateDebt(event)" class="space-y-4">
+        <!-- نوع العلاقة -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-2">طبيعة الدين</label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <label class="cursor-pointer">
+              <input type="radio" name="debtDirection" value="owed_to_me" checked class="peer sr-only" onchange="updateDebtDirectionUI()">
+              <div class="p-3 rounded-2xl border border-[#1e293b] bg-[#0d131f] peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 text-center transition">
+                <div class="text-sm font-bold text-emerald-400">مدين لي</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">لي مبلغ عنده</div>
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="debtDirection" value="i_owe" class="peer sr-only" onchange="updateDebtDirectionUI()">
+              <div class="p-3 rounded-2xl border border-[#1e293b] bg-[#0d131f] peer-checked:border-red-500 peer-checked:bg-red-500/10 text-center transition">
+                <div class="text-sm font-bold text-red-400">أدين له</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">له مبلغ عندي</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- الطرف الآخر -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">الطرف الآخر (الرقم التعريفي أو رقم الهاتف)</label>
+          <input type="text" id="counterpartyInput" required placeholder="مثال: NET-0002 أو 0555 22 33 44"
+            class="w-full bg-[#0a0f18] border border-[#1e293b] focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition" />
+          
+          <!-- أزرار اختيار سريع لأعضاء الشبكة التجريبية -->
+          <div id="quickPeersContainer" class="flex flex-wrap gap-1.5 mt-2">
+            <!-- تُملأ تلقائياً بالأطراف الأخرى -->
+          </div>
+        </div>
+
+        <!-- المبلغ -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">المبلغ (دج)</label>
+          <div class="relative">
+            <input type="number" id="debtAmountInput" required min="1" step="any" placeholder="0"
+              class="w-full bg-[#0a0f18] border border-[#1e293b] focus:border-emerald-500 rounded-xl px-3.5 py-2.5 pl-12 text-base font-bold text-white placeholder-slate-600 outline-none transition font-mono" />
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">دج</span>
+          </div>
+        </div>
+
+        <!-- ملاحظة اختيارية -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">بيان / ملاحظة (اختياري)</label>
+          <input type="text" id="debtNoteInput" placeholder="مثال: فاتورة توريد بضاعة، تسوية حساب..."
+            class="w-full bg-[#0a0f18] border border-[#1e293b] focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition" />
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-[#10b981] hover:bg-[#059669] text-[#052016] font-bold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/20">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>إرسال طلب اعتماد الدين</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- نافذة تبديل الحسابات ومحاكاة المقاصة        -->
+  <!-- ========================================== -->
+  <div id="accountModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4">
+    <div class="w-full max-w-md bg-[#111824] border-t sm:border border-[#1e293b] rounded-t-3xl sm:rounded-3xl p-5 space-y-4 animate-fade shadow-2xl">
+      <div class="flex items-center justify-between border-b border-[#1e293b] pb-3">
+        <div>
+          <h3 class="text-lg font-bold text-white">تبديل الحساب / محاكاة الشبكة</h3>
+          <p class="text-xs text-slate-400">تنقّل بين الأطراف لاعتماد الطلبات واختبار المقاصة</p>
+        </div>
+        <button onclick="closeModal('accountModal')" class="p-2 rounded-xl bg-slate-800/70 text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- قائمة الحسابات -->
+      <div id="accountsList" class="space-y-2">
+        <!-- تُحقن ديناميكياً -->
+      </div>
+
+      <!-- أداة المحاكاة الفورية -->
+      <div class="pt-2 border-t border-[#1e293b] space-y-2.5">
+        <div class="text-xs font-semibold text-slate-400">أدوات الاختبار السريع:</div>
+        <button onclick="seedDemoLoopScenario()" class="w-full py-2.5 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-2 transition">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>محاكاة حلقة مقاصة جاهزة (3 أطراف)</span>
+        </button>
+        <button onclick="resetAllAppData()" class="w-full py-2 px-4 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition">
+          <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          <span>إعادة ضبط التطبيق إلى الحالة الصفرية</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- نافذة تأكيد حذف الحساب (Custom Modal)      -->
+  <!-- ========================================== -->
+  <div id="deleteAccountModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-sm bg-[#111824] border border-red-500/40 rounded-3xl p-5 space-y-4 animate-fade">
+      <div class="w-12 h-12 rounded-2xl bg-red-500/15 text-red-400 flex items-center justify-center mx-auto">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      </div>
+      <div class="text-center space-y-1.5">
+        <h3 class="text-lg font-bold text-white">تأكيد حذف الحساب نهائياً؟</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          سيتم مسح جميع الديون، الطلبات، عمليات المقاصة، وبيانات ملفك الشخصي وإعادة ضبط التطبيق بالكامل.
+        </p>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 pt-2">
+        <button onclick="closeModal('deleteAccountModal')" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">
+          إلغاء
+        </button>
+        <button onclick="confirmDeleteAccount()" class="py-2.5 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white text-xs font-bold transition">
+          نعم، احذف حسابي
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- إشعار منبثق (Toast Notification)           -->
+  <!-- ========================================== -->
+  <div id="toastContainer" class="fixed top-16 inset-x-0 z-50 flex justify-center pointer-events-none px-4"></div>
+
+  <!-- ========================================== -->
+  <!-- المنطق البرمجي للتطبيق ومحرك المقاصة       -->
+  <!-- ========================================== -->
+  <script>
+    const STORAGE_KEY = 'maqassa_app_state_v1';
+
+    // الحالة الافتراضية المطابقة تماماً للقطات الشاشة (صفرية عند البدء)
+    function getInitialState() {
+      return {
+        currentUserId: 'NET-0001',
+        users: [
+          {
+            id: 'NET-0001',
+            name: 'Khaider Je',
+            phone: '0555 12 34 56',
+            email: 'jekhaider@gmail.com'
+          },
+          {
+            id: 'NET-0002',
+            name: 'مؤسسة الأمل للتجارة',
+            phone: '0661 44 55 66',
+            email: 'alamal.dz@gmail.com'
+          },
+          {
+            id: 'NET-0003',
+            name: 'ورشة النور الصناعية',
+            phone: '0770 88 99 00',
+            email: 'ennour.ind@gmail.com'
+          },
+          {
+            id: 'NET-0004',
+            name: 'شركة البركة للخدمات',
+            phone: '0550 33 22 11',
+            email: 'baraka.serv@gmail.com'
+          }
+        ],
+        // قائمة الديون: status = 'pending' | 'approved' | 'closed' | 'rejected'
+        debts: [],
+        // سجل العمليات الموثق
+        ledger: []
+      };
+    }
+
+    let state = loadState();
+    let currentRoute = 'home';
+    let historyFilter = 'all';
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return getInitialState();
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Array.isArray(parsed.users) || parsed.users.length === 0) {
+          return getInitialState();
+        }
+        return parsed;
+      } catch (e) {
+        return getInitialState();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error('Failed to save state:', e);
+      }
+    }
+
+    function getCurrentUser() {
+      return state.users.find(u => u.id === state.currentUserId) || state.users[0];
+    }
+
+    function getUserById(id) {
+      return state.users.find(u => u.id === id) || { id, name: id, phone: '', email: '' };
+    }
+
+    function formatNumber(num) {
+      return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(num || 0);
+    }
+
+    // توليد أيقونة المثلث المنقط المكونة من 10 نقاط (4 - 3 - 2 - 1) المطابقة للصور تماماً
+    function renderDotTriangle(colorHex) {
+      const rows = [4, 3, 2, 1];
+      let dotsHtml = '';
+      rows.forEach(count => {
+        let rowDots = '';
+        for (let i = 0; i < count; i++) {
+          rowDots += `<span class="w-[6px] h-[6px] rounded-full inline-block" style="background-color: ${colorHex};"></span>`;
+        }
+        // محاذاة لليسار (نهاية الاتجاه في RTL) ليشكل مثلثاً مقلوباً في الزاوية العلوية اليسرى للبطاقة
+        dotsHtml += `<div class="flex items-center justify-end gap-[4px]">${rowDots}</div>`;
+      });
+      return `<div class="flex flex-col gap-[4px] select-none" aria-hidden="true">${dotsHtml}</div>`;
+    }
+
+    // إظهار إشعار Toast أنيق
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const id = 'toast-' + Date.now();
+      const styles = {
+        success: 'bg-[#111824] border-emerald-500/50 text-emerald-300',
+        error: 'bg-[#111824] border-red-500/50 text-red-300',
+        info: 'bg-[#111824] border-amber-500/50 text-amber-300'
+      };
+      const iconName = type === 'success' ? 'check-circle-2' : type === 'error' ? 'alert-circle' : 'info';
+
+      const el = document.createElement('div');
+      el.id = id;
+      el.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl border shadow-xl text-xs font-bold animate-fade ${styles[type] || styles.success}`;
+      el.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+      container.appendChild(el);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-6px)';
+        el.style.transition = 'all 0.2s ease';
+        setTimeout(() => el.remove(), 220);
+      }, 3000);
+    }
+
+    // ========================================================
+    // محرك اكتشاف حلقات المقاصة المغلقة (Cycle Detection Engine)
+    // ========================================================
+    function detectClearingLoops() {
+      // نبني الرسم البياني الموجه من الديون المعتمدة فقط ذات الرصيد > 0
+      // الحافة: debtorId -> creditorId (المدين يدين للدائن)
+      const activeDebts = state.debts.filter(d => d.status === 'approved' && d.amount > 0);
+      const adj = {};
+      state.users.forEach(u => { adj[u.id] = []; });
+
+      activeDebts.forEach(d => {
+        if (!adj[d.debtorId]) adj[d.debtorId] = [];
+        adj[d.debtorId].push(d);
+      });
+
+      const loops = [];
+      const seenSignatures = new Set();
+
+      // البحث عن الحلقات البسيطة بدءاً من كل مستخدم (بطول 3 أطراف أو أكثر، أو حتى طرفين متبادلين)
+      function dfs(startId, currentId, visitedNodes, pathEdges) {
+        const outgoing = adj[currentId] || [];
+        for (const edge of outgoing) {
+          const nextId = edge.creditorId;
+          if (nextId === startId && pathEdges.length >= 2) {
+            const fullEdges = [...pathEdges, edge];
+            const sortedEdgeIds = fullEdges.map(e => e.id).sort().join('|');
+            if (!seenSignatures.has(sortedEdgeIds)) {
+              seenSignatures.add(sortedEdgeIds);
+              const minAmount = Math.min(...fullEdges.map(e => e.amount));
+              const participants = fullEdges.map(e => e.debtorId);
+              loops.push({
+                id: 'LOOP-' + sortedEdgeIds,
+                edges: fullEdges,
+                participants,
+                minAmount,
+                involvesCurrentUser: participants.includes(state.currentUserId)
+              });
+            }
+          } else if (!visitedNodes.has(nextId) && pathEdges.length < 6) {
+            const nextVisited = new Set(visitedNodes);
+            nextVisited.add(nextId);
+            dfs(startId, nextId, nextVisited, [...pathEdges, edge]);
+          }
+        }
+      }
+
+      state.users.forEach(u => {
+        dfs(u.id, u.id, new Set([u.id]), []);
+      });
+
+      // ترتيب الحلقات بحيث تظهر الحلقات التي يشارك فيها المستخدم الحالي أولاً
+      return loops.sort((a, b) => (b.involvesCurrentUser ? 1 : 0) - (a.involvesCurrentUser ? 1 : 0));
+    }
+
+    // تنفيذ التسوية لحلقة مقاصة محددة
+    function executeClearingLoop(loopId) {
+      const loops = detectClearingLoops();
+      const targetLoop = loops.find(l => l.id === loopId);
+      if (!targetLoop) {
+        showToast('تعذر العثور على الحلقة، ربما تمت تسويتها بالفعل.', 'error');
+        renderApp();
+        return;
+      }
+
+      const clearAmount = targetLoop.minAmount;
+      const stepDetails = [];
+
+      targetLoop.edges.forEach(edgeRef => {
+        const debt = state.debts.find(d => d.id === edgeRef.id);
+        if (debt && debt.status === 'approved') {
+          const before = debt.amount;
+          const after = Math.max(0, Number((before - clearAmount).toFixed(2)));
+          debt.amount = after;
+          if (after === 0) {
+            debt.status = 'closed';
+            debt.closedAt = new Date().toISOString();
+          }
+          stepDetails.push({
+            debtId: debt.id,
+            debtorId: debt.debtorId,
+            creditorId: debt.creditorId,
+            before,
+            after,
+            closed: after === 0
+          });
+        }
+      });
+
+      // تسجيل العملية الموثقة في السجل
+      state.ledger.unshift({
+        id: 'CLR-' + Date.now().toString().slice(-6),
+        type: 'clearing',
+        timestamp: new Date().toISOString(),
+        amount: clearAmount,
+        participants: targetLoop.participants,
+        steps: stepDetails,
+        executedBy: state.currentUserId
+      });
+
+      saveState();
+      showToast(`تم تنفيذ المقاصة بنجاح وخصم ${formatNumber(clearAmount)} دج من جميع الأطراف!`, 'success');
+      renderApp();
+    }
+
+    // ========================================================
+    // التنقل وتحديث الواجهة (Navigation & Rendering)
+    // ========================================================
+    function navigateTo(route) {
+      currentRoute = route;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderApp();
+    }
+
+    function updateHeaderAndNav() {
+      const user = getCurrentUser();
+      const headerTitle = document.getElementById('headerTitle');
+      const headerBackBtn = document.getElementById('headerBackBtn');
+      const profileNavBtn = document.getElementById('profileNavBtn');
+      const fab = document.getElementById('fabAddDebt');
+      const demoSwitchDot = document.getElementById('demoSwitchDot');
+
+      // إظهار نقطة تنبيه إذا كانت هناك طلبات واردة لدى حساب آخر للتسهيل على المختبر
+      const otherUsersHavePending = state.debts.some(d => d.status === 'pending' && d.targetApproverId !== state.currentUserId);
+      demoSwitchDot.classList.toggle('hidden', !otherUsersHavePending);
+
+      if (currentRoute === 'home') {
+        headerTitle.textContent = 'مقاصة';
+        headerBackBtn.classList.add('hidden');
+        fab.classList.remove('hidden');
+      } else {
+        // في الصفحات الفرعية يظهر زر رجوع في الأعلى كما في لقطات الشاشة
+        headerTitle.textContent = '';
+        headerBackBtn.classList.remove('hidden');
+        fab.classList.toggle('hidden', currentRoute === 'profile');
+      }
+
+      // تمييز أيقونة الملف الشخصي عند فتحها
+      if (currentRoute === 'profile') {
+        profileNavBtn.classList.add('bg-slate-800', 'text-white', 'border-slate-700');
+      } else {
+        profileNavBtn.classList.remove('bg-slate-800', 'text-white', 'border-slate-700');
+      }
+
+      // تحديث شريط التنقل السفلي
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const tab = btn.getAttribute('data-tab');
+        if (tab === currentRoute) {
+          btn.classList.add('text-emerald-400');
+          btn.classList.remove('text-slate-400', 'hover:text-slate-200');
+        } else {
+          btn.classList.remove('text-emerald-400');
+          btn.classList.add('text-slate-400', 'hover:text-slate-200');
+        }
+      });
+
+      // شارات التنبيه في الشريط السفلي
+      const incomingCount = state.debts.filter(d => d.status === 'pending' && d.targetApproverId === user.id).length;
+      const reqBadge = document.getElementById('navRequestsBadge');
+      reqBadge.textContent = incomingCount;
+      reqBadge.classList.toggle('hidden', incomingCount === 0);
+
+      const userLoopsCount = detectClearingLoops().filter(l => l.involvesCurrentUser).length;
+      const loopsBadge = document.getElementById('navLoopsBadge');
+      loopsBadge.textContent = userLoopsCount;
+      loopsBadge.classList.toggle('hidden', userLoopsCount === 0);
+    }
+
+    function renderApp() {
+      updateHeaderAndNav();
+      const container = document.getElementById('appContent');
+      container.classList.remove('animate-fade');
+      void container.offsetWidth; // إعادة تفعيل الحركة
+      container.classList.add('animate-fade');
+
+      switch (currentRoute) {
+        case 'home':
+          container.innerHTML = renderHomeView();
+          break;
+        case 'loops':
+          container.innerHTML = renderLoopsView();
+          break;
+        case 'requests':
+          container.innerHTML = renderRequestsView();
+          break;
+        case 'history':
+          container.innerHTML = renderHistoryView();
+          break;
+        case 'profile':
+          container.innerHTML = renderProfileView();
+          break;
+      }
+
+      lucide.createIcons();
+    }
+
+    // ========================================================
+    // 1. صفحة اللوحة الرئيسية (Home / Dashboard)
+    // ========================================================
+    function renderHomeView() {
+      const user = getCurrentUser();
+      const approvedDebts = state.debts.filter(d => d.status === 'approved' && d.amount > 0);
+
+      // مدين لي: الديون المعتمدة التي يكون فيها المستخدم هو الدائن (creditorId)
+      const owedToMeDebts = approvedDebts.filter(d => d.creditorId === user.id);
+      const owedToMeTotal = owedToMeDebts.reduce((sum, d) => sum + d.amount, 0);
+
+      // أدين له: الديون المعتمدة التي يكون فيها المستخدم هو المدين (debtorId)
+      const iOweDebts = approvedDebts.filter(d => d.debtorId === user.id);
+      const iOweTotal = iOweDebts.reduce((sum, d) => sum + d.amount, 0);
+
+      // صافي الرصيد
+      const netBalance = owedToMeTotal - iOweTotal;
+
+      // الطلبات
+      const awaitingMyApproval = state.debts.filter(d => d.status === 'pending' && d.targetApproverId === user.id);
+      const sentByMe = state.debts.filter(d => d.status === 'pending' && d.createdBy === user.id);
+
+      // حلقات المقاصة المفتوحة للمستخدم
+      const userLoops = detectClearingLoops().filter(l => l.involvesCurrentUser);
+
+      return `
+        <!-- الترويسة والترحيب -->
+        <section class="pt-1 pb-2 space-y-1">
+          <div class="font-mono text-xs tracking-wider text-slate-400 uppercase">${user.id}</div>
+          <h2 class="text-2xl sm:text-[26px] font-extrabold text-white leading-snug">
+            أهلاً، <span dir="ltr" class="inline-block">${user.name}</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            أرصدتك الحالية وحلقات المقاصة المفتوحة في مكان واحد.
+          </p>
+        </section>
+
+        <!-- بطاقة 1: صافي الرصيد -->
+        <div class="card-emerald-glow rounded-3xl p-5 flex flex-col justify-between min-h-[155px] shadow-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2 text-slate-300 text-sm font-semibold">
+              <i data-lucide="wallet" class="w-4 h-4 text-slate-400"></i>
+              <span>صافي الرصيد</span>
+            </div>
+            ${renderDotTriangle('#10b981')}
+          </div>
+
+          <div class="flex items-end justify-between mt-7">
+            <div class="flex items-center gap-5">
+              <div>
+                <div class="text-[11px] text-slate-400">مدين لي</div>
+                <div class="text-sm font-bold text-white mt-0.5 font-mono">${formatNumber(owedToMeTotal)}</div>
+              </div>
+              <div>
+                <div class="text-[11px] text-slate-400">أدين له</div>
+                <div class="text-sm font-bold text-white mt-0.5 font-mono">${formatNumber(iOweTotal)}</div>
+              </div>
+            </div>
+
+            <div class="flex items-baseline gap-1.5" dir="ltr">
+              <span class="text-3xl sm:text-4xl font-extrabold ${netBalance < 0 ? 'text-red-400' : 'text-white'} font-mono">${formatNumber(netBalance)}</span>
+              <span class="text-xs font-bold text-slate-400">دج</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- بطاقة 2: مدين لي -->
+        <div class="card-emerald-glow rounded-3xl p-5 flex flex-col justify-between min-h-[145px] shadow-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2 text-slate-300 text-sm font-semibold">
+              <i data-lucide="trending-up" class="w-4 h-4 text-slate-400"></i>
+              <span>مدين لي</span>
+            </div>
+            ${renderDotTriangle('#10b981')}
+          </div>
+
+          <div class="flex items-end justify-between mt-7">
+            <div class="text-xs text-slate-400">
+              ${owedToMeDebts.length > 0 ? `${owedToMeDebts.length} ذمم معتمدة` : ''}
+            </div>
+            <div class="flex items-baseline gap-1.5" dir="ltr">
+              <span class="text-3xl sm:text-4xl font-extrabold text-white font-mono">${formatNumber(owedToMeTotal)}</span>
+              <span class="text-xs font-bold text-slate-400">دج</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- بطاقة 3: أدين له -->
+        <div class="card-red-glow rounded-3xl p-5 flex flex-col justify-between min-h-[145px] shadow-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2 text-slate-300 text-sm font-semibold">
+              <i data-lucide="trending-down" class="w-4 h-4 text-slate-400"></i>
+              <span>أدين له</span>
+            </div>
+            ${renderDotTriangle('#ef4444')}
+          </div>
+
+          <div class="flex items-end justify-between mt-7">
+            <div class="text-xs text-slate-400">
+              ${iOweDebts.length > 0 ? `${iOweDebts.length} التزامات معتمدة` : ''}
+            </div>
+            <div class="flex items-baseline gap-1.5" dir="ltr">
+              <span class="text-3xl sm:text-4xl font-extrabold text-white font-mono">${formatNumber(iOweTotal)}</span>
+              <span class="text-xs font-bold text-slate-400">دج</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- بطاقة 4: بانتظار موافقتي -->
+        <div onclick="navigateTo('requests')" class="cursor-pointer card-amber-glow rounded-3xl p-5 flex flex-col justify-between min-h-[145px] shadow-lg hover:border-amber-500/40 transition">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2 text-slate-300 text-sm font-semibold">
+              <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+              <span>بانتظار موافقتي</span>
+            </div>
+            ${renderDotTriangle('#f59e0b')}
+          </div>
+
+          <div class="flex items-end justify-between mt-7">
+            <div>
+              <div class="text-[11px] text-slate-400">أرسلتها</div>
+              <div class="text-sm font-bold text-white mt-0.5 font-mono">${sentByMe.length}</div>
+            </div>
+
+            <div class="flex items-baseline gap-1.5" dir="ltr">
+              <span class="text-3xl sm:text-4xl font-extrabold text-white font-mono">${awaitingMyApproval.length}</span>
+              <span class="text-xs font-bold text-slate-400">طلب</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- بطاقة 5: حالة حلقة المقاصة -->
+        ${userLoops.length === 0 ? `
+          <div class="card-base rounded-3xl p-6 text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-[#1a2232] text-slate-300 flex items-center justify-center mx-auto">
+              <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">لا توجد حلقة مقاصة مكتملة</h3>
+            <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+              تظهر الحلقة عندما تدين لطرف، ويدين ذلك الطرف لطرف ثالث، ويدين لك الثالث بالمقابل.
+            </p>
+          </div>
+        ` : `
+          <div class="card-emerald-glow rounded-3xl p-5 space-y-4 border border-emerald-500/40">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <h3 class="text-sm font-extrabold text-emerald-300">حلقة مقاصة مكتملة جاهزة للتسوية!</h3>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold font-mono">
+                ${formatNumber(userLoops[0].minAmount)} دج
+              </span>
+            </div>
+
+            <div class="bg-[#0a0f18]/80 border border-[#1e293b] rounded-2xl p-3 text-xs text-slate-300 flex flex-wrap items-center gap-1.5">
+              ${userLoops[0].participants.map(pid => `<span class="px-2 py-1 rounded-lg bg-[#151e2d] font-bold text-white">${getUserById(pid).name}</span>`).join('<i data-lucide="arrow-left" class="w-3.5 h-3.5 text-emerald-400"></i>')}
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span class="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 font-bold">${getUserById(userLoops[0].participants[0]).name}</span>
+            </div>
+
+            <div class="flex gap-2">
+              <button onclick="executeClearingLoop('${userLoops[0].id}')" class="flex-1 py-2.5 px-4 rounded-xl bg-[#10b981] hover:bg-[#059669] text-[#052016] text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span>تنفيذ المقاصة الآن</span>
+              </button>
+              <button onclick="navigateTo('loops')" class="py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">
+                التفاصيل
+              </button>
+            </div>
+          </div>
+        `}
+
+        <!-- بطاقة 6: ابدأ بسجل أول دين / تسجيل دين -->
+        <div class="card-base rounded-3xl p-6 text-center space-y-3.5">
+          <h3 class="text-lg font-extrabold text-white">
+            ${approvedDebts.length === 0 ? 'ابدأ بسجل أول دين' : 'سجّل دينًا جديدًا في الشبكة'}
+          </h3>
+          <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+            سجّل المبلغ الذي لك أو عليك، وسيصل الطلب للطرف الآخر للموافقة قبل اعتماده.
+          </p>
+          <div class="pt-1">
+            <button onclick="openNewDebtModal()" class="inline-flex items-center justify-center gap-2 px-7 py-3 rounded-2xl bg-[#10b981] hover:bg-[#059669] active:scale-95 text-[#052016] font-extrabold text-sm transition shadow-lg shadow-emerald-500/20">
+              <i data-lucide="plus" class="w-4 h-4 stroke-[2.5]"></i>
+              <span>تسجيل دين</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========================================================
+    // 2. صفحة حلقات المقاصة (Loops Page)
+    // ========================================================
+    function renderLoopsView() {
+      const loops = detectClearingLoops();
+
+      return `
+        <section class="pt-1 pb-1 space-y-1.5">
+          <h2 class="text-2xl font-extrabold text-white">حلقات المقاصة</h2>
+          <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            حلقات مغلقة من الديون المعتمدة بينك وبين أطراف أخرى، يمكن إغلاقها دون أي تحويل نقدي.
+          </p>
+        </section>
+
+        ${loops.length === 0 ? `
+          <!-- حالة عدم وجود حلقة مغلقة -->
+          <div class="card-base rounded-3xl p-7 text-center space-y-3.5">
+            <div class="w-12 h-12 rounded-full bg-[#1a2232] text-slate-300 flex items-center justify-center mx-auto">
+              <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-extrabold text-white">لا توجد حلقة مغلقة حاليًا</h3>
+            <p class="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
+              تظهر الحلقة عندما تدين لك طرف، ويدين ذلك الطرف لطرف ثالث، ويدين لك الثالث. أضف الديون وانتظر اعتمادها.
+            </p>
+          </div>
+        ` : `
+          <!-- قائمة الحلقات المكتشفة -->
+          <div class="space-y-3">
+            ${loops.map((loop, idx) => `
+              <div class="card-emerald-glow rounded-3xl p-5 space-y-4 border border-emerald-500/35">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-[11px] font-bold text-emerald-400">حلقة مقاصة مغلقة #${idx + 1}</span>
+                    <h3 class="text-base font-extrabold text-white mt-0.5">قيمة المقاصة: ${formatNumber(loop.minAmount)} دج</h3>
+                  </div>
+                  <div class="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                  </div>
+                </div>
+
+                <!-- مسار الديون داخل الحلقة -->
+                <div class="space-y-2 bg-[#0a0f18]/80 rounded-2xl p-3.5 border border-[#1e293b]">
+                  ${loop.edges.map(edge => {
+                    const debtor = getUserById(edge.debtorId);
+                    const creditor = getUserById(edge.creditorId);
+                    const remainingAfter = Math.max(0, edge.amount - loop.minAmount);
+                    return `
+                      <div class="flex items-center justify-between text-xs py-1 border-b border-slate-800/70 last:border-0">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                          <span class="font-bold text-white">${debtor.name}</span>
+                          <span class="text-slate-500">يدين لـ</span>
+                          <span class="font-bold text-emerald-300">${creditor.name}</span>
+                        </div>
+                        <div class="text-left font-mono">
+                          <span class="text-slate-300 font-bold">${formatNumber(edge.amount)} دج</span>
+                          <span class="block text-[10px] ${remainingAfter === 0 ? 'text-emerald-400' : 'text-slate-500'}">
+                            بعد الخصم: ${formatNumber(remainingAfter)} دج
+                          </span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+
+                <button onclick="executeClearingLoop('${loop.id}')" class="w-full py-3 rounded-2xl bg-[#10b981] hover:bg-[#059669] text-[#052016] font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/20">
+                  <i data-lucide="shield-check" class="w-4 h-4"></i>
+                  <span>اعتماد وتنفيذ التسوية (${formatNumber(loop.minAmount)} دج)</span>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        `}
+
+        <!-- قسم: كيف تعمل المقاصة؟ -->
+        <div class="card-base rounded-3xl p-5 space-y-3.5">
+          <h3 class="text-base font-extrabold text-white px-1">كيف تعمل المقاصة؟</h3>
+
+          <!-- البطاقة الفرعية 1 -->
+          <div class="bg-[#161f30] border border-[#222f46] rounded-2xl p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-white">اكتشاف الحلقة</h4>
+              <i data-lucide="git-branch" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              يبحث التطبيق في الديون المعتمدة عن سلسلة مغلقة تعود فيها الديون إلى صاحبها الأول.
+            </p>
+          </div>
+
+          <!-- البطاقة الفرعية 2 -->
+          <div class="bg-[#161f30] border border-[#222f46] rounded-2xl p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-white">خصم المبلغ الأصغر</h4>
+              <i data-lucide="repeat" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              قيمة المقاصة هي أصغر دين في الحلقة، وتُخصم من جميع أطرافها في عملية واحدة.
+            </p>
+          </div>
+
+          <!-- البطاقة الفرعية 3 -->
+          <div class="bg-[#161f30] border border-[#222f46] rounded-2xl p-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-white">تسوية موثّقة</h4>
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              تُسجّل كل خطوة مع الرصيد قبل وبعد، ويُغلق الدين تلقائيًا إذا وصل إلى صفر.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========================================================
+    // 3. صفحة الطلبات (Requests Page)
+    // ========================================================
+    function renderRequestsView() {
+      const user = getCurrentUser();
+      const incoming = state.debts.filter(d => d.status === 'pending' && d.targetApproverId === user.id);
+      const outgoing = state.debts.filter(d => d.status === 'pending' && d.createdBy === user.id);
+
+      const incomingSum = incoming.reduce((s, d) => s + d.amount, 0);
+      const outgoingSum = outgoing.reduce((s, d) => s + d.amount, 0);
+
+      return `
+        <section class="pt-1 pb-1 space-y-1.5">
+          <h2 class="text-2xl font-extrabold text-white">الطلبات</h2>
+          <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            لا يُعتمد أي دين قبل موافقة الطرف الآخر. راجع الطلبات الواردة إليك، وتابع ما أرسلته.
+          </p>
+        </section>
+
+        <!-- القسم الأول: بانتظار موافقتي -->
+        <div class="space-y-2.5 pt-1">
+          <div class="flex items-center gap-2">
+            <i data-lucide="inbox" class="w-4 h-4 text-amber-400"></i>
+            <span class="text-sm font-bold text-white">بانتظار موافقتي</span>
+            <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold font-mono">${incoming.length}</span>
+          </div>
+
+          <div class="card-base rounded-3xl overflow-hidden">
+            <div class="p-4 border-b border-[#1e293b] flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-white">طلبات واردة</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">أكّدها لتصبح دينًا معتمدًا في لوحتك</p>
+              </div>
+              <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold font-mono">
+                ${formatNumber(incomingSum)} دج
+              </span>
+            </div>
+
+            ${incoming.length === 0 ? `
+              <div class="py-10 px-4 text-center text-xs text-slate-400">
+                لا توجد طلبات بانتظار موافقتك
+              </div>
+            ` : `
+              <div class="divide-y divide-[#1e293b]">
+                ${incoming.map(req => {
+                  const sender = getUserById(req.createdBy);
+                  const isUserDebtor = req.debtorId === user.id;
+                  return `
+                    <div class="p-4 space-y-3">
+                      <div class="flex items-start justify-between gap-2">
+                        <div>
+                          <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-white">${sender.name}</span>
+                            <span class="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">${sender.id}</span>
+                          </div>
+                          <p class="text-xs mt-1 ${isUserDebtor ? 'text-red-400' : 'text-emerald-400'} font-semibold">
+                            ${isUserDebtor ? 'يسجّل أنك مدين له بمبلغ:' : 'يسجّل أنه مدين لك بمبلغ:'}
+                          </p>
+                          ${req.note ? `<p class="text-[11px] text-slate-400 mt-1">ملاحظة: ${req.note}</p>` : ''}
+                        </div>
+                        <div class="text-left font-mono font-extrabold text-base text-white">
+                          ${formatNumber(req.amount)} <span class="text-xs text-slate-400 font-normal">دج</span>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-2">
+                        <button onclick="respondToRequest('${req.id}', true)" class="py-2 rounded-xl bg-[#10b981] hover:bg-[#059669] text-[#052016] text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
+                          <i data-lucide="check" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+                          <span>موافقة واعتماد</span>
+                        </button>
+                        <button onclick="respondToRequest('${req.id}', false)" class="py-2 rounded-xl bg-slate-800 hover:bg-red-500/20 hover:text-red-300 text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+                          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                          <span>رفض</span>
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+
+        <!-- القسم الثاني: أرسلتها للطرف الآخر -->
+        <div class="space-y-2.5 pt-2">
+          <div class="flex items-center gap-2">
+            <i data-lucide="send" class="w-4 h-4 text-slate-400"></i>
+            <span class="text-sm font-bold text-white">أرسلتها للطرف الآخر</span>
+            <span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-bold font-mono">${outgoing.length}</span>
+          </div>
+
+          <div class="card-base rounded-3xl overflow-hidden">
+            <div class="p-4 border-b border-[#1e293b] flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-white">طلبات صادرة</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">بانتظار موافقة الطرف الآخر</p>
+              </div>
+              <span class="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-bold font-mono">
+                ${formatNumber(outgoingSum)} دج
+              </span>
+            </div>
+
+            ${outgoing.length === 0 ? `
+              <div class="py-10 px-4 text-center text-xs text-slate-400">
+                لم ترسل أي طلب بعد
+              </div>
+            ` : `
+              <div class="divide-y divide-[#1e293b]">
+                ${outgoing.map(req => {
+                  const target = getUserById(req.targetApproverId);
+                  const isUserCreditor = req.creditorId === user.id;
+                  return `
+                    <div class="p-4 flex items-center justify-between gap-3">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-sm font-bold text-white">${target.name}</span>
+                          <span class="text-[10px] font-mono text-slate-400">${target.id}</span>
+                        </div>
+                        <div class="text-xs mt-0.5 ${isUserCreditor ? 'text-emerald-400' : 'text-red-400'}">
+                          ${isUserCreditor ? 'مدين لي' : 'أدين له'} • <span class="font-mono font-bold">${formatNumber(req.amount)} دج</span>
+                        </div>
+                      </div>
+
+                      <button onclick="cancelOutgoingRequest('${req.id}')" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-red-500/20 text-slate-300 hover:text-red-300 text-xs font-semibold transition">
+                        إلغاء الطلب
+                      </button>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ========================================================
+    // 4. صفحة السجل (History / Ledger Page)
+    // ========================================================
+    function renderHistoryView() {
+      const filteredLedger = state.ledger.filter(item => {
+        if (historyFilter === 'all') return true;
+        return item.type === historyFilter;
+      });
+
+      return `
+        <section class="pt-1 pb-1 space-y-1.5">
+          <h2 class="text-2xl font-extrabold text-white">السجل</h2>
+          <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            سجل موثّق لجميع الديون المعتمدة وعمليات المقاصة مع الرصيد قبل وبعد.
+          </p>
+        </section>
+
+        <!-- أزرار التصفية -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+          <button onclick="setHistoryFilter('all')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap ${historyFilter === 'all' ? 'bg-emerald-500 text-[#052016]' : 'bg-[#111824] border border-[#1e293b] text-slate-300'}">
+            الكل (${state.ledger.length})
+          </button>
+          <button onclick="setHistoryFilter('clearing')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap ${historyFilter === 'clearing' ? 'bg-emerald-500 text-[#052016]' : 'bg-[#111824] border border-[#1e293b] text-slate-300'}">
+            عمليات المقاصة
+          </button>
+          <button onclick="setHistoryFilter('debt_approved')" class="px-3.5 py-1.5 rounded-full text-xs font-bold transition whitespace-nowrap ${historyFilter === 'debt_approved' ? 'bg-emerald-500 text-[#052016]' : 'bg-[#111824] border border-[#1e293b] text-slate-300'}">
+            الديون المعتمدة
+          </button>
+        </div>
+
+        ${filteredLedger.length === 0 ? `
+          <div class="card-base rounded-3xl p-8 text-center space-y-3">
+            <div class="w-12 h-12 rounded-full bg-[#1a2232] text-slate-400 flex items-center justify-center mx-auto">
+              <i data-lucide="history" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">لا توجد عمليات مسجّلة بعد</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              تُحفظ هنا جميع عمليات اعتماد الديون وتسويات حلقات المقاصة بتوثيق كامل.
+            </p>
+          </div>
+        ` : `
+          <div class="space-y-3">
+            ${filteredLedger.map(entry => {
+              const dateStr = new Date(entry.timestamp).toLocaleString('ar-DZ', {
+                hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit'
+              });
+
+              if (entry.type === 'clearing') {
+                return `
+                  <div class="card-emerald-glow rounded-3xl p-4 space-y-3 border border-emerald-500/30">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        </span>
+                        <div>
+                          <div class="text-xs font-extrabold text-emerald-300">تسوية مقاصة متعددة الأطراف</div>
+                          <div class="text-[10px] font-mono text-slate-400">${entry.id} • ${dateStr}</div>
+                        </div>
+                      </div>
+                      <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-xs font-bold font-mono">
+                        -${formatNumber(entry.amount)} دج
+                      </span>
+                    </div>
+
+                    <div class="bg-[#0a0f18]/80 rounded-2xl p-3 space-y-2 border border-[#1e293b]">
+                      ${entry.steps.map(st => `
+                        <div class="flex items-center justify-between text-[11px]">
+                          <div class="text-slate-300">
+                            <span class="font-bold text-white">${getUserById(st.debtorId).name}</span>
+                            <span class="text-slate-500"> ← </span>
+                            <span class="font-bold text-white">${getUserById(st.creditorId).name}</span>
+                          </div>
+                          <div class="font-mono text-left">
+                            <span class="text-slate-400 line-through">${formatNumber(st.before)}</span>
+                            <span class="text-slate-500 mx-1">←</span>
+                            <span class="${st.closed ? 'text-emerald-400 font-bold' : 'text-white'}">${formatNumber(st.after)} دج</span>
+                            ${st.closed ? '<span class="mr-1 text-[10px] text-emerald-400">(مُغلق)</span>' : ''}
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                `;
+              } else {
+                const debtor = getUserById(entry.debtorId);
+                const creditor = getUserById(entry.creditorId);
+                return `
+                  <div class="card-base rounded-3xl p-4 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                      <span class="w-9 h-9 rounded-2xl bg-slate-800 text-emerald-400 flex items-center justify-center shrink-0">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                      </span>
+                      <div>
+                        <div class="text-xs font-bold text-white">
+                          اعتماد دين: <span class="text-slate-300">${debtor.name}</span> لـ <span class="text-emerald-400">${creditor.name}</span>
+                        </div>
+                        <div class="text-[10px] font-mono text-slate-400 mt-0.5">${dateStr} ${entry.note ? `• ${entry.note}` : ''}</div>
+                      </div>
+                    </div>
+                    <div class="text-left font-mono font-extrabold text-sm text-white shrink-0">
+                      ${formatNumber(entry.amount)} دج
+                    </div>
+                  </div>
+                `;
+              }
+            }).join('')}
+          </div>
+        `}
+      `;
+    }
+
+    function setHistoryFilter(filter) {
+      historyFilter = filter;
+      renderApp();
+    }
+
+    // ========================================================
+    // 5. صفحة ملفي الشخصي (Profile Page)
+    // ========================================================
+    function renderProfileView() {
+      const user = getCurrentUser();
+
+      return `
+        <section class="pt-1 pb-1 space-y-1">
+          <div class="font-mono text-xs tracking-wider text-slate-400 uppercase">${user.id}</div>
+          <h2 class="text-2xl font-extrabold text-white">ملفي الشخصي</h2>
+          <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            عدّل اسمك ورقم هاتفك — يجدك الطرف الآخر بهاتفك أو برقمك التعريفي عند تسجيل دين.
+          </p>
+        </section>
+
+        <!-- بطاقة الملخص والنموذج -->
+        <div class="card-base rounded-3xl p-5 space-y-5">
+          <!-- رأس البطاقة مع الأفاتار -->
+          <div class="flex items-center justify-between pb-4 border-b border-[#1e293b]">
+            <div class="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+              <i data-lucide="user" class="w-6 h-6"></i>
+            </div>
+            <div class="text-left">
+              <div class="text-base font-extrabold text-white" dir="ltr">${user.name}</div>
+              <div class="text-xs font-mono text-slate-400 mt-0.5">${user.id}</div>
+            </div>
+          </div>
+
+          <!-- نموذج التعديل -->
+          <form onsubmit="handleSaveProfile(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5">الاسم أو اسم الشركة</label>
+              <input type="text" id="profileNameInput" required value="${user.name}"
+                class="w-full bg-[#0a0f18] border border-[#1e293b] focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5">رقم الهاتف</label>
+              <input type="text" id="profilePhoneInput" required value="${user.phone}" dir="ltr"
+                class="w-full bg-[#0a0f18] border border-[#1e293b] focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-white text-right font-mono outline-none transition" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1.5">البريد الإلكتروني</label>
+              <input type="email" id="profileEmailInput" value="${user.email}" dir="ltr"
+                class="w-full bg-[#0a0f18] border border-[#1e293b] focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-400 focus:text-white text-right font-mono outline-none transition" />
+            </div>
+
+            <div class="flex justify-end pt-1">
+              <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-[#041d11] font-extrabold text-xs sm:text-sm transition">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>حفظ التغييرات</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- شريط المعلومة الثابتة للرقم التعريفي -->
+        <div class="card-base rounded-2xl p-4 text-center">
+          <p class="text-xs text-slate-300 leading-relaxed">
+            رقمك التعريفي <span class="font-mono font-bold text-white">${user.id}</span> ثابت ولا يتغيّر، ويمكنك مشاركته ليجدك الآخرون بسهولة.
+          </p>
+        </div>
+
+        <!-- بطاقة حذف الحساب (Danger Zone) -->
+        <div class="card-danger rounded-3xl p-5 space-y-4">
+          <div class="space-y-1.5">
+            <h3 class="text-base font-extrabold text-white">حذف الحساب</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              حذف الحساب نهائي ولا يمكن التراجع عنه. عند الحذف يُمسح ما يلي:
+            </p>
+          </div>
+
+          <ul class="space-y-2 text-xs text-slate-300 leading-relaxed">
+            <li>• كل الديون المسجّلة باسمك، سواء كنت الدائن أو المدين، بما فيها الطلبات المنتظرة.</li>
+            <li>• عمليات المقاصة التي شاركت فيها وكل تفاصيل الخصم المرتبطة بها.</li>
+            <li>• ملفك الشخصي: اسمك ورقم هاتفك ورقمك التعريفي، ثم تُسجّل خروجك.</li>
+          </ul>
+
+          <div class="flex justify-end pt-1">
+            <button onclick="openModal('deleteAccountModal')" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#dc2626] hover:bg-red-700 text-white font-bold text-xs sm:text-sm transition">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+              <span>حذف حسابي</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========================================================
+    // التفاعلات والنماذج (Actions & Handlers)
+    // ========================================================
+    function openModal(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('hidden');
+      el.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      el.classList.add('hidden');
+      el.classList.remove('flex');
+    }
+
+    function openNewDebtModal() {
+      const user = getCurrentUser();
+      const peersContainer = document.getElementById('quickPeersContainer');
+      const otherUsers = state.users.filter(u => u.id !== user.id);
+
+      peersContainer.innerHTML = otherUsers.map(peer => `
+        <button type="button" onclick="selectQuickPeer('${peer.id}')"
+          class="px-2.5 py-1 rounded-lg bg-[#161f30] hover:bg-emerald-500/20 border border-[#233149] hover:border-emerald-500/40 text-[11px] text-slate-300 transition flex items-center gap-1.5">
+          <span class="font-mono text-emerald-400 font-bold">${peer.id}</span>
+          <span>${peer.name}</span>
+        </button>
+      `).join('');
+
+      document.getElementById('newDebtForm').reset();
+      openModal('newDebtModal');
+    }
+
+    function selectQuickPeer(peerId) {
+      document.getElementById('counterpartyInput').value = peerId;
+    }
+
+    function updateDebtDirectionUI() {
+      // يمكن إضافة تلميحات إضافية عند تبديل الاتجاه
+    }
+
+    function handleCreateDebt(e) {
+      e.preventDefault();
+      const user = getCurrentUser();
+      const direction = document.querySelector('input[name="debtDirection"]:checked').value;
+      const rawTarget = document.getElementById('counterpartyInput').value.trim();
+      const amount = parseFloat(document.getElementById('debtAmountInput').value);
+      const note = document.getElementById('debtNoteInput').value.trim();
+
+      if (!rawTarget || isNaN(amount) || amount <= 0) {
+        showToast('يرجى إدخال بيانات الطرف والمبلغ بشكل صحيح.', 'error');
+        return;
+      }
+
+      // البحث عن الطرف الآخر بالرقم التعريفي أو رقم الهاتف أو الاسم
+      const normalizedQuery = rawTarget.replace(/\s+/g, '').toLowerCase();
+      let targetUser = state.users.find(u =>
+        u.id.toLowerCase() === normalizedQuery ||
+        u.phone.replace(/\s+/g, '') === normalizedQuery ||
+        u.name.toLowerCase() === rawTarget.toLowerCase()
+      );
+
+      if (!targetUser) {
+        // إنشاء طرف جديد تلقائياً في الشبكة إذا أدخل المستخدم رقماً جديداً
+        const newId = 'NET-' + String(state.users.length + 1).padStart(4, '0');
+        targetUser = {
+          id: newId,
+          name: rawTarget.startsWith('NET-') ? rawTarget.toUpperCase() : `طرف (${rawTarget})`,
+          phone: /^0[567]/.test(normalizedQuery) ? rawTarget : '0550 00 00 00',
+          email: ''
+        };
+        state.users.push(targetUser);
+      }
+
+      if (targetUser.id === user.id) {
+        showToast('لا يمكنك تسجيل دين مع نفسك!', 'error');
+        return;
+      }
+
+      const creditorId = direction === 'owed_to_me' ? user.id : targetUser.id;
+      const debtorId = direction === 'owed_to_me' ? targetUser.id : user.id;
+
+      const newDebt = {
+        id: 'DEBT-' + Date.now().toString().slice(-6),
+        creditorId,
+        debtorId,
+        amount,
+        note,
+        status: 'pending',
+        createdBy: user.id,
+        targetApproverId: targetUser.id,
+        createdAt: new Date().toISOString()
+      };
+
+      state.debts.unshift(newDebt);
+      saveState();
+      closeModal('newDebtModal');
+      showToast(`تم إرسال طلب اعتماد الدين إلى ${targetUser.name} (${targetUser.id})`, 'success');
+      renderApp();
+    }
+
+    function respondToRequest(debtId, approve) {
+      const debt = state.debts.find(d => d.id === debtId);
+      if (!debt) return;
+
+      if (approve) {
+        debt.status = 'approved';
+        debt.approvedAt = new Date().toISOString();
+
+        state.ledger.unshift({
+          id: 'APR-' + Date.now().toString().slice(-6),
+          type: 'debt_approved',
+          timestamp: new Date().toISOString(),
+          debtorId: debt.debtorId,
+          creditorId: debt.creditorId,
+          amount: debt.amount,
+          note: debt.note
+        });
+
+        showToast('تمت الموافقة واعتماد الدين في لوحتك!', 'success');
+      } else {
+        debt.status = 'rejected';
+        showToast('تم رفض الطلب.', 'info');
+      }
+
+      saveState();
+      renderApp();
+    }
+
+    function cancelOutgoingRequest(debtId) {
+      state.debts = state.debts.filter(d => d.id !== debtId);
+      saveState();
+      showToast('تم إلغاء الطلب الصادر.', 'info');
+      renderApp();
+    }
+
+    function handleSaveProfile(e) {
+      e.preventDefault();
+      const user = getCurrentUser();
+      const newName = document.getElementById('profileNameInput').value.trim();
+      const newPhone = document.getElementById('profilePhoneInput').value.trim();
+      const newEmail = document.getElementById('profileEmailInput').value.trim();
+
+      if (!newName) {
+        showToast('يرجى إدخال الاسم.', 'error');
+        return;
+      }
+
+      user.name = newName;
+      user.phone = newPhone;
+      user.email = newEmail;
+      saveState();
+      showToast('تم حفظ التغييرات في ملفك الشخصي بنجاح.', 'success');
+      renderApp();
+    }
+
+    function confirmDeleteAccount() {
+      localStorage.removeItem(STORAGE_KEY);
+      state = getInitialState();
+      saveState();
+      closeModal('deleteAccountModal');
+      showToast('تم حذف الحساب وإعادة ضبط البيانات.', 'info');
+      navigateTo('home');
+    }
+
+    // ========================================================
+    // إدارة تبديل الحسابات التجريبية ومحاكاة الحلقة
+    // ========================================================
+    function openAccountModal() {
+      const list = document.getElementById('accountsList');
+      list.innerHTML = state.users.map(u => {
+        const isCurrent = u.id === state.currentUserId;
+        const pendingCount = state.debts.filter(d => d.status === 'pending' && d.targetApproverId === u.id).length;
+
+        return `
+          <button onclick="switchAccount('${u.id}')"
+            class="w-full p-3 rounded-2xl border text-right flex items-center justify-between transition ${isCurrent ? 'bg-emerald-500/15 border-emerald-500/50' : 'bg-[#0a0f18] border-[#1e293b] hover:border-slate-700'}">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full ${isCurrent ? 'bg-emerald-500 text-[#052016]' : 'bg-slate-800 text-slate-300'} flex items-center justify-center font-bold text-xs font-mono">
+                ${u.id.slice(-2)}
+              </div>
+              <div>
+                <div class="text-sm font-bold text-white flex items-center gap-2">
+                  <span>${u.name}</span>
+                  ${isCurrent ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">نشط الآن</span>' : ''}
+                </div>
+                <div class="text-[11px] font-mono text-slate-400">${u.id} • ${u.phone}</div>
+              </div>
+            </div>
+            ${pendingCount > 0 ? `<span class="px-2 py-0.5 rounded-full bg-amber-500 text-[#0a0f18] text-[10px] font-extrabold">${pendingCount} طلب</span>` : ''}
+          </button>
+        `;
+      }).join('');
+
+      openModal('accountModal');
+    }
+
+    function switchAccount(userId) {
+      state.currentUserId = userId;
+      saveState();
+      closeModal('accountModal');
+      const user = getCurrentUser();
+      showToast(`تم التبديل إلى حساب: ${user.name} (${user.id})`, 'info');
+      renderApp();
+    }
+
+    // محاكاة حلقة مقاصة ثلاثية جاهزة لتجربة النظام فوراً
+    function seedDemoLoopScenario() {
+      const now = new Date().toISOString();
+      state.debts = [
+        // 1. NET-0001 يدين لـ NET-0002 بمبلغ 15,000 دج
+        {
+          id: 'DEBT-DEMO-1',
+          debtorId: 'NET-0001',
+          creditorId: 'NET-0002',
+          amount: 15000,
+          note: 'توريد مستلزمات مكتبية',
+          status: 'approved',
+          createdBy: 'NET-0002',
+          targetApproverId: 'NET-0001',
+          createdAt: now
+        },
+        // 2. NET-0002 يدين لـ NET-0003 بمبلغ 10,000 دج (المبلغ الأصغر في الحلقة)
+        {
+          id: 'DEBT-DEMO-2',
+          debtorId: 'NET-0002',
+          creditorId: 'NET-0003',
+          amount: 10000,
+          note: 'أعمال صيانة وتجهيز',
+          status: 'approved',
+          createdBy: 'NET-0003',
+          targetApproverId: 'NET-0002',
+          createdAt: now
+        },
+        // 3. NET-0003 يدين لـ NET-0001 بمبلغ 12,000 دج
+        {
+          id: 'DEBT-DEMO-3',
+          debtorId: 'NET-0003',
+          creditorId: 'NET-0001',
+          amount: 12000,
+          note: 'خدمات استشارية وتقنية',
+          status: 'approved',
+          createdBy: 'NET-0001',
+          targetApproverId: 'NET-0003',
+          createdAt: now
+        }
+      ];
+
+      state.ledger = [
+        {
+          id: 'APR-DEMO-3',
+          type: 'debt_approved',
+          timestamp: now,
+          debtorId: 'NET-0003',
+          creditorId: 'NET-0001',
+          amount: 12000,
+          note: 'خدمات استشارية وتقنية'
+        },
+        {
+          id: 'APR-DEMO-2',
+          type: 'debt_approved',
+          timestamp: now,
+          debtorId: 'NET-0002',
+          creditorId: 'NET-0003',
+          amount: 10000,
+          note: 'أعمال صيانة وتجهيز'
+        },
+        {
+          id: 'APR-DEMO-1',
+          type: 'debt_approved',
+          timestamp: now,
+          debtorId: 'NET-0001',
+          creditorId: 'NET-0002',
+          amount: 15000,
+          note: 'توريد مستلزمات مكتبية'
+        }
+      ];
+
+      state.currentUserId = 'NET-0001';
+      saveState();
+      closeModal('accountModal');
+      showToast('تم إنشاء حلقة مقاصة ثلاثية بقيمة 10,000 دج! يمكنك تنفيذها الآن.', 'success');
+      navigateTo('home');
+    }
+
+    function resetAllAppData() {
+      localStorage.removeItem(STORAGE_KEY);
+      state = getInitialState();
+      saveState();
+      closeModal('accountModal');
+      showToast('تمت إعادة ضبط التطبيق إلى الحالة الصفرية.', 'info');
+      navigateTo('home');
+    }
+
+    // التشغيل الأولي عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', () => {
+      renderApp();
+    });
+  </script>
+</body>
+</html>
